@@ -1,0 +1,8 @@
+streamlit
+torch
+torchvision
+facenet-pytorch
+Pillow
+numpy
+pandas
+gdown
