@@ -9,6 +9,9 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 import io
 import pandas as pd
+import os
+import gdown
+
 
 # ==========================================
 # 1. ĐỊNH NGHĨA KIẾN TRÚC MẠNG DAN (Deep Alignment Network)
@@ -95,19 +98,29 @@ class DAN(nn.Module):
 
 
 # ==========================================
-# 2. KHỞI TẠO MÔ HÌNH VÀ CACHE (TỐI ƯU RAM SERVER)
+# 2. KHỞI TẠO MÔ HÌNH VÀ TỰ ĐỘNG TẢI TRỌNG SỐ
 # ==========================================
 @st.cache_resource
 def load_models():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
-    # Load MTCNN (Tìm khuôn mặt)
     mtcnn = MTCNN(keep_all=True, device=device)
-    
-    # Load DAN Model
     model = DAN(num_class=7)
-    # LƯU Ý: Đảm bảo bạn đã upload file này lên cùng thư mục code
-    checkpoint = torch.load('rafdb_model.pth', map_location=device) 
+    
+    model_path = 'trained_DAAN.pth'
+    
+    # THỦ THUẬT: Nếu máy chủ chưa có file, tự động tải từ Google Drive
+    if not os.path.exists(model_path):
+        st.info("Đang tải bộ não AI từ kho lưu trữ đám mây... (Chỉ mất vài giây ở lần chạy đầu tiên)")
+        
+        # BẠN HÃY DÁN FILE ID TỪ GOOGLE DRIVE CỦA BẠN VÀO ĐÂY:
+        file_id = '1_tmI9ArAaxkCYDFn7MZ8XmzOVlGvg1WX'
+        
+        url = f'https://drive.google.com/uc?id={file_id}'
+        gdown.download(url, model_path, quiet=False)
+        st.success("Tải dữ liệu thành công!")
+
+    # Load model
+    checkpoint = torch.load(model_path, map_location=device) 
     model.load_state_dict(checkpoint['model_state_dict'], strict=False)
     model.to(device)
     model.eval()
